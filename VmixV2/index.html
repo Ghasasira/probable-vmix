@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>vMix Logger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Barlow+Condensed:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0d1520;
+    --surface2: #111b2b;
+    --border: #1e3048;
+    --accent: #00d4ff;
+    --accent2: #ff3f5a;
+    --accent3: #39ff8f;
+    --text: #c8dff0;
+    --text-muted: #4a6b8a;
+    --text-dim: #2a4460;
+    --live: #ff3f5a;
+    --preview: #ffaa00;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 0 30px rgba(0,212,255,0.1);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 0 100%);
+  }
+
+  .logo-icon svg { width: 18px; height: 18px; fill: var(--bg); }
+
+  .logo-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #fff;
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+  }
+
+  .dot.tcp-connected { background: var(--accent3); box-shadow: 0 0 8px var(--accent3); animation: pulse 2s infinite; }
+  .dot.tcp-disconnected { background: var(--accent2); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .main {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Stats row */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent);
+  }
+
+  .stat-card.red::before { background: var(--accent2); }
+  .stat-card.green::before { background: var(--accent3); }
+  .stat-card.yellow::before { background: var(--preview); }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 38px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .search-input, .date-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus, .date-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.1);
+  }
+
+  .search-input { width: 220px; }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: var(--accent); color: var(--bg); }
+  .btn.danger { border-color: var(--accent2); color: var(--accent2); }
+
+  .spacer { flex: 1; }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    background: var(--surface2);
+    border-bottom: 2px solid var(--border);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+
+  td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .input-number {
+    font-weight: 700;
+    color: var(--text-muted);
+    width: 30px;
+    text-align: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+
+  .input-name { color: #fff; font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+    border: 1px solid;
+  }
+
+  .badge-video { color: var(--accent); border-color: var(--accent); }
+  .badge-camera { color: var(--accent3); border-color: var(--accent3); }
+  .badge-image { color: var(--preview); border-color: var(--preview); }
+  .badge-audio { color: #aa88ff; border-color: #aa88ff; }
+  .badge-other { color: var(--text-muted); border-color: var(--text-dim); }
+
+  .source-tcp { color: var(--accent3); font-size: 10px; }
+  .source-http { color: var(--preview); font-size: 10px; }
+
+  .thumb {
+    width: 60px;
+    height: 34px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .thumb:hover { transform: scale(1.1); border-color: var(--accent); }
+
+  .no-thumb {
+    width: 60px;
+    height: 34px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 9px;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    justify-content: center;
+  }
+
+  .page-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .page-info { color: var(--text-muted); font-size: 11px; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 40px rgba(0,212,255,0.2);
+    padding: 24px;
+    max-width: 90vw;
+    position: relative;
+  }
+
+  .modal img { max-width: 80vw; max-height: 70vh; display: block; }
+
+  .modal-close {
+    position: absolute;
+    top: 8px; right: 12px;
+    background: none; border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .modal-close:hover { color: var(--accent2); }
+
+  /* Top inputs */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .top-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .top-item:last-child { border-bottom: none; }
+
+  .top-bar-wrap {
+    flex: 1;
+    margin: 0 12px;
+    height: 4px;
+    background: var(--border);
+  }
+
+  .top-bar {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.5s ease;
+  }
+
+  .top-count { color: var(--accent); font-weight: 700; font-size: 11px; min-width: 24px; text-align: right; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+
+  .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+
+  /* Refresh indicator */
+  .refresh-flash {
+    position: fixed;
+    top: 56px; right: 0;
+    width: 3px;
+    height: 0;
+    background: var(--accent3);
+    transition: height 0.3s, opacity 0.5s;
+    opacity: 0;
+    z-index: 200;
+  }
+
+  .refresh-flash.active { height: 100px; opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="refresh-flash" id="refreshFlash"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </div>
+    <div class="logo-text">VM<span>IX</span> LOGGER</div>
+  </div>
+  <div class="header-right">
+    <div class="status-dot">
+      <div class="dot" id="tcpDot"></div>
+      <span id="tcpStatus">TCP</span>
+    </div>
+    <div style="color:var(--text-dim);font-size:11px;" id="clock"></div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Plays</div>
+      <div class="stat-value" id="statTotal">—</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Today</div>
+      <div class="stat-value" id="statToday">—</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Unique Inputs</div>
+      <div class="stat-value" id="statUnique">—</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-label">Top Type</div>
+      <div class="stat-value" id="statTopType" style="font-size:22px;margin-top:6px;">—</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search inputs..."/>
+    <input type="date" class="date-input" id="dateFilter"/>
+    <button class="btn primary" onclick="loadLogs()">Search</button>
+    <button class="btn" onclick="clearFilters()">Clear</button>
+    <div class="spacer"></div>
+    <button class="btn" onclick="exportFile('csv')">↓ CSV</button>
+    <button class="btn" onclick="exportFile('pdf')">↓ PDF</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>#</th>
+          <th>Input Name</th>
+          <th>Type</th>
+          <th>Duration</th>
+          <th>Position</th>
+          <th>Loop</th>
+          <th>Source</th>
+          <th>Screenshot</th>
+        </tr>
+      </thead>
+      <tbody id="logTable">
+        <tr><td colspan="9" class="empty-state"><div class="big">📡</div>Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
+
+  <!-- Bottom panels -->
+  <div class="bottom-grid">
+    <div class="panel">
+      <div class="panel-title">Top Inputs</div>
+      <div id="topInputs"><div style="color:var(--text-dim);font-size:11px;">Loading...</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">By Type</div>
+      <div id="byType"><div style="color:var(--text-dim);font-size:11px;">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Screenshot Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('show')">✕</button>
+    <img id="modalImg" src="" alt="Screenshot"/>
+    <div id="modalCaption" style="margin-top:10px;color:var(--text-muted);font-size:11px;"></div>
+  </div>
+</div>
+
+<script>
+let currentPage = 1;
+let totalPages = 1;
+
+function clock() {
+  const el = document.getElementById('clock');
+  setInterval(() => {
+    el.textContent = new Date().toLocaleTimeString();
+  }, 1000);
+}
+
+function msToTime(ms) {
+  if (!ms) return '—';
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}:${String(m%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  return `${m}:${String(s%60).padStart(2,'0')}`;
+}
+
+function typeBadge(type) {
+  if (!type) return '<span class="badge badge-other">Unknown</span>';
+  const t = type.toLowerCase();
+  if (t.includes('video')) return `<span class="badge badge-video">${type}</span>`;
+  if (t.includes('camera') || t.includes('capture')) return `<span class="badge badge-camera">${type}</span>`;
+  if (t.includes('image') || t.includes('photo')) return `<span class="badge badge-image">${type}</span>`;
+  if (t.includes('audio')) return `<span class="badge badge-audio">${type}</span>`;
+  return `<span class="badge badge-other">${type}</span>`;
+}
+
+async function loadLogs(page = currentPage) {
+  currentPage = page;
+  const search = document.getElementById('searchInput').value;
+  const date = document.getElementById('dateFilter').value;
+
+  const params = new URLSearchParams({ page, limit: 50, search, date });
+  const res = await fetch('/api/logs?' + params);
+  const data = await res.json();
+
+  totalPages = Math.ceil(data.total / data.limit) || 1;
+  renderTable(data.logs);
+  renderPagination(data.total);
+  flashRefresh();
+}
+
+function renderTable(logs) {
+  const tbody = document.getElementById('logTable');
+  if (!logs.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="big">📭</div>No logs yet. Start your vMix broadcast!</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = logs.map(log => {
+    const time = new Date(log.played_at).toLocaleString();
+    const thumb = log.screenshot_path
+      ? `<img class="thumb" src="/${log.screenshot_path}" onclick="openModal('/${log.screenshot_path}', '${log.input_name}')" alt="screenshot"/>`
+      : `<div class="no-thumb">NO IMG</div>`;
+    const src = log.source === 'tcp'
+      ? `<span class="source-tcp">● TCP</span>`
+      : `<span class="source-http">◌ HTTP</span>`;
+
+    return `<tr>
+      <td style="color:var(--text-muted);font-size:11px;">${time}</td>
+      <td><span class="input-number">${log.input_number || '?'}</span></td>
+      <td><div class="input-name">${log.input_name || '—'}</div></td>
+      <td>${typeBadge(log.input_type)}</td>
+      <td style="color:var(--text-muted);">${msToTime(log.duration_ms)}</td>
+      <td style="color:var(--text-muted);">${msToTime(log.position_ms)}</td>
+      <td style="color:${log.loop ? 'var(--accent3)' : 'var(--text-dim)'};">${log.loop ? '↺ YES' : 'NO'}</td>
+      <td>${src}</td>
+      <td>${thumb}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPagination(total) {
+  const pag = document.getElementById('pagination');
+  const pages = Math.ceil(total / 50);
+  if (pages <= 1) { pag.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="loadLogs(${currentPage-1})">← Prev</button>`;
+  html += `<span class="page-info">Page ${currentPage} of ${pages} &nbsp;·&nbsp; ${total} entries</span>`;
+  html += `<button class="page-btn" ${currentPage >= pages ? 'disabled' : ''} onclick="loadLogs(${currentPage+1})">Next →</button>`;
+  pag.innerHTML = html;
+}
+
+async function loadStats() {
+  const res = await fetch('/api/stats');
+  const s = await res.json();
+
+  document.getElementById('statTotal').textContent = s.total.toLocaleString();
+  document.getElementById('statToday').textContent = s.todayCount.toLocaleString();
+  document.getElementById('statUnique').textContent = s.topInputs.length;
+  document.getElementById('statTopType').textContent = s.byType[0]?.type || '—';
+
+  // Top inputs
+  const maxCount = s.topInputs[0]?.count || 1;
+  document.getElementById('topInputs').innerHTML = s.topInputs.length
+    ? s.topInputs.map(i => `
+      <div class="top-item">
+        <div style="flex:0 0 140px;overflow:hidden;text-overflow:ellipsis;color:#fff;font-size:11px;">${i.name}</div>
+        <div class="top-bar-wrap"><div class="top-bar" style="width:${(i.count/maxCount*100).toFixed(0)}%"></div></div>
+        <div class="top-count">${i.count}</div>
+      </div>`).join('')
+    : '<div style="color:var(--text-dim);font-size:11px;">No data yet</div>';
+
+  // By type
+  const maxType = s.byType[0]?.count || 1;
+  document.getElementById('byType').innerHTML = s.byType.length
+    ? s.byType.map(t => `
+      <div class="top-item">
+        <div style="flex:0 0 100px;overflow:hidden;text-overflow:ellipsis;color:var(--text-muted);font-size:11px;">${t.type}</div>
+        <div class="top-bar-wrap"><div class="top-bar" style="width:${(t.count/maxType*100).toFixed(0)}%;background:var(--accent3)"></div></div>
+        <div class="top-count" style="color:var(--accent3);">${t.count}</div>
+      </div>`).join('')
+    : '<div style="color:var(--text-dim);font-size:11px;">No data yet</div>';
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('dateFilter').value = '';
+  loadLogs(1);
+}
+
+function exportFile(type) {
+  window.location.href = `/api/export/${type}`;
+}
+
+function openModal(src, name) {
+  document.getElementById('modalImg').src = src;
+  document.getElementById('modalCaption').textContent = name;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('show');
+  }
+}
+
+function flashRefresh() {
+  const el = document.getElementById('refreshFlash');
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 600);
+}
+
+// Auto-refresh every 5 seconds
+function startAutoRefresh() {
+  setInterval(() => {
+    loadLogs(currentPage);
+    loadStats();
+  }, 5000);
+}
+
+clock();
+loadLogs(1);
+loadStats();
+startAutoRefresh();
+</script>
+</body>
+</html>
