@@ -26,16 +26,34 @@ async function fetchVmixState() {
   }
 }
 
-async function takeScreenshot(inputNumber) {
+async function takeScreenshot(inputNumber, inputKey = null) {
   try {
     // Wait a brief moment to ensure the transition is fully complete in vMix
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Using /previewimage/ instead of Function=Snapshot to get raw data directly
-    const url = `http://${VMIX_HOST}:${VMIX_PORT}/previewimage/${inputNumber}`;
-    const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 5000 });
+    // Try multiple possible endpoints for widest compatibility
+    let res = null;
+    let error = null;
+
+    // Ordered by preference: Key (stable), Number (legacy), Program (fallback)
+    const urls = [];
+    if (inputKey) urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/previewimage/${inputKey}`);
+    if (inputNumber) urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/previewimage/${inputNumber}`);
+    urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/programimage`);
+
+    for (const url of urls) {
+      try {
+        res = await axios.get(url, { responseType: 'arraybuffer', timeout: 5000 });
+        if (res.status === 200) break;
+      } catch (err) {
+        error = err;
+        continue; // Try next URL
+      }
+    }
+
+    if (!res) throw error || new Error('All image endpoints failed');
     
-    const filename = `input_${inputNumber}_${Date.now()}.jpg`;
+    const filename = `input_${inputNumber || 'active'}_${Date.now()}.jpg`;
     const filepath = path.join(SCREENSHOTS_DIR, filename);
     fs.writeFileSync(filepath, res.data);
     
@@ -55,6 +73,7 @@ async function takeScreenshot(inputNumber) {
 function parseInput(input) {
   if (!input) return null;
   return {
+    key: input.$.key || null,
     number: parseInt(input.$.number) || 0,
     name: input.$.shortTitle || input.$.title || 'Unknown',
     type: input.$.type || 'Unknown',
@@ -86,7 +105,7 @@ async function pollVmixState() {
 
     if (input) {
       console.log(`[HTTP] Active input changed → #${input.number} "${input.name}" (${input.type})`);
-      const screenshot = await takeScreenshot(input.number);
+      const screenshot = await takeScreenshot(input.number, input.key);
       await insertLog({
         played_at: new Date().toISOString(),
         input_number: input.number,

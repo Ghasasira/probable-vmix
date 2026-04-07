@@ -12,7 +12,7 @@ VMIX_TCP_PORT=8099
 POLL_INTERVAL_MS=3000
 PORT=3000
 MACHINE_NAME=${os.hostname()}
-CENTRAL_API_URL=https://vmixmonitor.hillcom.ug/newdata
+CENTRAL_API_URL=https://vmixmonitor.hillcom.ug/api/newdata
 SYNC_INTERVAL_MS=300000
 `);
 }

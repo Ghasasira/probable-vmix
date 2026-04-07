@@ -121,7 +121,7 @@ async function handleActiveInput(inputNumber) {
     if (!input) return;
 
     console.log(`[TCP] Logging: #${input.number} "${input.name}" (${input.type})`);
-    const screenshot = await takeScreenshot(input.number);
+    const screenshot = await takeScreenshot(input.number, input.key);
 
     await insertLog({
       played_at: new Date().toISOString(),
