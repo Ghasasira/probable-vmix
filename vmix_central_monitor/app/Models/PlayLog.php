@@ -24,7 +24,21 @@ class PlayLog extends Model
         'position_ms' => 'integer',
     ];
 
-    protected $appends = ['duration_formatted'];
+    protected $appends = ['duration_formatted', 'screenshot_url'];
+
+    public function getScreenshotUrlAttribute(): ?string
+    {
+        if (!$this->screenshot_path) {
+            return null;
+        }
+
+        // The path in DB is just the filename or relative agent path (e.g., screenshots/img.jpg)
+        // We expect it to be stored on the server under screenshots/{machine_name}/{filename}
+        $filename = basename($this->screenshot_path);
+        
+        // This assumes the file actually exists on the server's public disk
+        return \Illuminate\Support\Facades\Storage::disk('public')->url("screenshots/{$this->device->machine_name}/{$filename}");
+    }
 
     public function getDurationFormattedAttribute(): string
     {

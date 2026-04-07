@@ -152,6 +152,7 @@ export default function Index({ logs, filters, devices, types }: any) {
                                 <thead className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black bg-muted/5 border-b">
                                     <tr>
                                         <th className="px-6 py-4">Played At</th>
+                                        <th className="px-6 py-4 text-center">Snapshot</th>
                                         <th className="px-6 py-4">Machine</th>
                                         <th className="px-6 py-4">Input & ID</th>
                                         <th className="px-6 py-4 text-right">Duration</th>
@@ -164,6 +165,21 @@ export default function Index({ logs, filters, devices, types }: any) {
                                         <tr key={log.id} className="hover:bg-primary/[0.02] transition-colors group">
                                             <td className="px-6 py-4 whitespace-nowrap font-mono text-[10px] text-muted-foreground/70 font-semibold">
                                                 {new Date(log.played_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'medium' })}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {log.screenshot_url ? (
+                                                    <a href={log.screenshot_url} target="_blank" rel="noreferrer" className="inline-block relative group/img">
+                                                        <img 
+                                                            src={log.screenshot_url} 
+                                                            alt="Input" 
+                                                            className="h-8 w-12 object-cover rounded shadow-sm border border-border group-hover/img:scale-150 transition-transform origin-center z-10" 
+                                                        />
+                                                    </a>
+                                                ) : (
+                                                    <div className="h-8 w-12 bg-muted/30 rounded border border-dashed flex items-center justify-center">
+                                                        <Monitor className="h-3 w-3 text-muted-foreground/20" />
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">

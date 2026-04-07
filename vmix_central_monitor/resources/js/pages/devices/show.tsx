@@ -145,6 +145,7 @@ export default function Show({ device, logs, stats }: any) {
                                 <thead className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black bg-muted/5 border-b">
                                     <tr>
                                         <th className="px-6 py-4">Exact Time</th>
+                                        <th className="px-6 py-4 text-center">Snapshot</th>
                                         <th className="px-6 py-4">Input & Index</th>
                                         <th className="px-6 py-4 text-right">Duration</th>
                                         <th className="px-6 py-4 text-center">Class</th>
@@ -156,6 +157,21 @@ export default function Show({ device, logs, stats }: any) {
                                         <tr key={log.id} className="hover:bg-primary/[0.02] transition-colors group">
                                             <td className="px-6 py-4 whitespace-nowrap font-mono text-[10px] text-muted-foreground font-bold">
                                                 {new Date(log.played_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {log.screenshot_url ? (
+                                                    <a href={log.screenshot_url} target="_blank" rel="noreferrer" className="inline-block relative">
+                                                        <img 
+                                                            src={log.screenshot_url} 
+                                                            alt="Preview" 
+                                                            className="h-8 w-12 object-cover rounded shadow-sm border border-border" 
+                                                        />
+                                                    </a>
+                                                ) : (
+                                                    <div className="h-8 w-12 bg-muted/30 rounded border border-dashed flex items-center justify-center">
+                                                        <Monitor className="h-3 w-3 text-muted-foreground/20" />
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">

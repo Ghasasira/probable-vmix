@@ -28,6 +28,9 @@ async function fetchVmixState() {
 
 async function takeScreenshot(inputNumber) {
   try {
+    // Wait a brief moment to ensure the transition is fully complete in vMix
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     // Using /previewimage/ instead of Function=Snapshot to get raw data directly
     const url = `http://${VMIX_HOST}:${VMIX_PORT}/previewimage/${inputNumber}`;
     const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 5000 });
@@ -38,7 +41,13 @@ async function takeScreenshot(inputNumber) {
     
     return `screenshots/${filename}`;
   } catch (err) {
-    console.error(`[Screenshot] Failed for input ${inputNumber}:`, err.message);
+    if (err.response) {
+      console.error(`[Screenshot] Failed for input ${inputNumber}: HTTP ${err.response.status} - ${err.response.statusText}`);
+    } else if (err.code === 'ECONNREFUSED') {
+      console.error(`[Screenshot] Failed for input ${inputNumber}: Connection refused at ${VMIX_HOST}:${VMIX_PORT}`);
+    } else {
+      console.error(`[Screenshot] Failed for input ${inputNumber}:`, err.message);
+    }
     return null;
   }
 }
