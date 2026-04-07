@@ -22,7 +22,7 @@ class DashboardController extends Controller
                 ->first()?->input_name ?? 'N/A',
         ];
 
-        $chartData = PlayLog::select(DB::raw('strftime("%H", played_at) as hour'), DB::raw('count(*) as count'))
+        $chartData = PlayLog::select(DB::raw('HOUR(played_at) as hour'), DB::raw('count(*) as count'))
             ->where('played_at', '>=', now()->subDay())
             ->groupBy('hour')
             ->orderBy('hour')

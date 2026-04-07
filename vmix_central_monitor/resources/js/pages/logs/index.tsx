@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, ClipboardList, Filter, LayoutGrid, Monitor, RotateCcw, Search } from 'lucide-react';
@@ -12,6 +11,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Log Viewer', href: '/logs' },
 ];
+
+
+Index.layout = {
+    breadcrumbs: breadcrumbs
+};
 
 export default function Index({ logs, filters, devices, types }: any) {
     const { data, setData, reset } = useForm({
@@ -32,10 +36,10 @@ export default function Index({ logs, filters, devices, types }: any) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Log Viewer" />
 
-            <div className="flex flex-col gap-8 p-6 max-w-7xl mx-auto w-full">
+            <div className="flex flex-col gap-8 p-6 w-full">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div className="flex flex-col gap-1">
@@ -209,7 +213,7 @@ export default function Index({ logs, filters, devices, types }: any) {
                             <div className="text-xs text-muted-foreground font-bold uppercase tracking-tight">
                                 Showing <span className="text-foreground">{logs.from}</span> to <span className="text-foreground">{logs.to}</span> of {logs.total}
                             </div>
-                            
+
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
@@ -220,7 +224,7 @@ export default function Index({ logs, filters, devices, types }: any) {
                                 >
                                     <ChevronLeft className="h-4 w-4 mr-1" /> Previous
                                 </Button>
-                                
+
                                 <div className="hidden lg:flex items-center gap-1">
                                     {logs.links.slice(1, -1).map((link: any, i: number) => (
                                         <Button
@@ -250,6 +254,6 @@ export default function Index({ logs, filters, devices, types }: any) {
                     </CardContent>
                 </Card>
             </div>
-        </AppLayout>
+        </>
     );
 }

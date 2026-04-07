@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+  <html lang="En">
+    <head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Next Media Staff App">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="next">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="complogo.png">
+
+  <title>Next Staff App</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Enhanced viewport configuration for better keyboard handling -->
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <!-- maximum-scale=1.0, user-scalable=no, -->
+  
+  
+  
+  <style id="splash-screen-style">
+    html {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background-color: #00777a;
+          background-size: 100% 100%;
+    }
+
+    .center {
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+
+    .contain {
+      display:block;
+      width:100%; height:100%;
+      object-fit: contain;
+    }
+
+    .stretch {
+      display:block;
+      width:100%; height:100%;
+    }
+
+    .cover {
+      display:block;
+      width:100%; height:100%;
+      object-fit: cover;
+    }
+
+    .bottom {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      -ms-transform: translate(-50%, 0);
+      transform: translate(-50%, 0);
+    }
+
+    .bottomLeft {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    .bottomRight {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+  </style>
+  <script id="splash-screen-script">
+    function removeSplashFromWeb() {
+      document.getElementById("splash")?.remove();
+      document.getElementById("splash-branding")?.remove();
+      document.body.style.background = "transparent";
+    }
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf_viewer.min.css">
+
+</head>
+<body>
+  <picture id="splash">
+      <source srcset="splash/img/light-1x.gif 1x, splash/img/light-2x.gif 2x, splash/img/light-3x.gif 3x, splash/img/light-4x.gif 4x" media="(prefers-color-scheme: light)">
+      <source srcset="splash/img/dark-1x.gif 1x, splash/img/dark-2x.gif 2x, splash/img/dark-3x.gif 3x, splash/img/dark-4x.gif 4x" media="(prefers-color-scheme: dark)">
+      <img class="center" aria-hidden="true" src="splash/img/light-1x.gif" alt="">
+  </picture>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.min.mjs" type="module"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+  </script>
+  <script type="module">
+  var { pdfjsLib } = globalThis;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
+
+  var pdfRenderOptions = {
+    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/cmaps/',
+    cMapPacked: true,
+  }
+  </script>
+  
+  
+  <!-- <script>
+    // Register both Flutter service worker and Firebase messaging service worker
+    if ('serviceWorker' in navigator) {
+      // Register Flutter's service worker first
+      navigator.serviceWorker.register('/flutter_service_worker.js')
+        .then((registration) => {
+          console.log('Flutter Service Worker registered:', registration);
+        })
+        .catch((error) => {
+          console.log('Flutter Service Worker registration failed:', error);
+        });
+  
+      // Register Firebase messaging service worker
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Firebase Messaging Service Worker registered:', registration);
+        })
+        .catch((error) => {
+          console.log('Firebase Messaging Service Worker registration failed:', error);
+        });
+    }
+  </script> -->
+  <script>
+    let deferredPrompt = null;
+    let installPromptAvailable = false;
+
+    // Detect if app is already installed
+    function isAppInstalled() {
+      // Check if running in standalone mode (already installed)
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        return true;
+      }
+      // Check iOS
+      if (window.navigator.standalone === true) {
+        return true;
+      }
+      return false;
+    }
+
+    // Check if iOS Safari
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
+    // Check if Android Chrome
+    function isAndroidChrome() {
+      const ua = navigator.userAgent.toLowerCase();
+      return ua.indexOf("android") > -1 && ua.indexOf("chrome") > -1;
+    }
+
+    // Listen for the install prompt (Chrome/Edge on Android/Desktop)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('beforeinstallprompt event fired');
+      e.preventDefault();
+      deferredPrompt = e;
+      installPromptAvailable = true;
+      console.log('Install prompt captured and ready');
+      
+      // Notify Flutter that install is available
+      if (window.flutterNotifyInstallAvailable) {
+        window.flutterNotifyInstallAvailable();
+      }
+    });
+
+    // Listen for successful install
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('App was installed successfully');
+      deferredPrompt = null;
+      installPromptAvailable = false;
+    });
+
+    // Function to trigger install prompt - called from Flutter
+    window.presentRequiredInstallPrompt = function() {
+      console.log('presentRequiredInstallPrompt called');
+      
+      // If already installed, do nothing
+      if (isAppInstalled()) {
+        console.log('App is already installed');
+        return 'already_installed';
+      }
+
+      // iOS Safari - can't programmatically trigger, return instructions
+      if (isIOS()) {
+        console.log('iOS detected - returning manual install instructions');
+        return 'ios_manual';
+      }
+
+      // Chrome/Edge with beforeinstallprompt
+      if (deferredPrompt && installPromptAvailable) {
+        console.log('Showing native install prompt');
+        deferredPrompt.prompt();
+        
+        deferredPrompt.userChoice.then((choiceResult) => {
+          console.log('User choice:', choiceResult.outcome);
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install');
+          } else {
+            console.log('User dismissed the install');
+          }
+          deferredPrompt = null;
+          installPromptAvailable = false;
+        }).catch((err) => {
+          console.error('Error with install prompt:', err);
+        });
+        
+        return 'prompted';
+      } else {
+        console.log('Install prompt not available yet');
+        
+        // Android Chrome but prompt not ready yet
+        if (isAndroidChrome()) {
+          return 'android_wait';
+        }
+        
+        // Other browsers - show manual instructions
+        return 'manual';
+      }
+    };
+
+    // Check if install prompt is available - called from Flutter
+    window.isInstallPromptAvailable = function() {
+      if (isAppInstalled()) {
+        return 'installed';
+      }
+      if (isIOS()) {
+        return 'ios';
+      }
+      if (installPromptAvailable && deferredPrompt) {
+        return 'available';
+      }
+      if (isAndroidChrome()) {
+        return 'android_waiting';
+      }
+      return 'unavailable';
+    };
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/flutter_service_worker.js');
+        navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      });
+    }
+  </script>
+
+  <script src="flutter_bootstrap.js" async=""></script>
+
+</body></html>

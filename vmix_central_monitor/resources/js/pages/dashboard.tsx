@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import {
@@ -40,12 +39,17 @@ const StatCard = ({ title, value, icon, description }: StatCardProps) => (
     </Card>
 );
 
+Dashboard.layout = {
+    breadcrumbs: breadcrumbs
+};
+
+
 export default function Dashboard({ stats, chart_data, recent_logs, devices }: any) {
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Dashboard" />
 
-            <div className="flex flex-col gap-8 p-6 max-w-7xl mx-auto w-full">
+            <div className="flex flex-col gap-8 p-6 w-full">
                 {/* Page Header */}
                 <div className="flex flex-col gap-1">
                     <h2 className="text-3xl font-bold tracking-tight">System Overview</h2>
@@ -185,7 +189,7 @@ export default function Dashboard({ stats, chart_data, recent_logs, devices }: a
                                     {recent_logs && recent_logs.length > 0 ? recent_logs.map((log: any) => (
                                         <tr key={log.id} className="hover:bg-primary/[0.02] transition-colors group">
                                             <td className="px-6 py-4 whitespace-nowrap font-mono text-[10px] text-muted-foreground/70 font-semibold italic">
-                                                {new Date(log.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit'})}
+                                                {new Date(log.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                             </td>
                                             <td className="px-6 py-4 font-black text-foreground group-hover:text-primary transition-colors uppercase tracking-tight">
                                                 {log.device.display_name || log.device.machine_name}
@@ -216,6 +220,6 @@ export default function Dashboard({ stats, chart_data, recent_logs, devices }: a
                     </CardContent>
                 </Card>
             </div>
-        </AppLayout>
+        </>
     );
 }

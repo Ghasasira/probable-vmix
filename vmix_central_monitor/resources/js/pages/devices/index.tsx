@@ -1,7 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { Activity, ChevronRight, Clock, Monitor, PlayCircle, Settings } from 'lucide-react';
@@ -11,12 +10,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Devices', href: '/devices' },
 ];
 
+Index.layout = {
+    breadcrumbs: breadcrumbs
+};
+
+
 export default function Index({ devices }: any) {
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Connected Units" />
-            
-            <div className="flex flex-col gap-8 p-6 max-w-7xl mx-auto w-full">
+
+            <div className="flex flex-col gap-8 p-6 w-full">
                 {/* Header Section */}
                 <div className="flex items-end justify-between gap-4">
                     <div className="flex flex-col gap-1">
@@ -43,8 +47,8 @@ export default function Index({ devices }: any) {
                                         {device.display_name || device.machine_name}
                                     </CardTitle>
                                     <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground font-bold">
-                                         <Monitor className="h-3 w-3" />
-                                         <span>ID: {device.machine_name}</span>
+                                        <Monitor className="h-3 w-3" />
+                                        <span>ID: {device.machine_name}</span>
                                     </div>
                                 </div>
                                 <div className="relative">
@@ -91,15 +95,15 @@ export default function Index({ devices }: any) {
                         </Card>
                     )) : (
                         <div className="col-span-full flex flex-col items-center justify-center py-32 border-2 border-dashed rounded-3xl bg-muted/10 text-muted-foreground/30 gap-6">
-                             <Monitor className="h-20 w-20 opacity-10" />
-                             <div className="text-center">
-                                 <p className="text-xl font-black uppercase tracking-widest">No Vmix Systems Detected</p>
-                                 <p className="text-sm font-medium mt-2">Waiting for first API handshake...</p>
-                             </div>
+                            <Monitor className="h-20 w-20 opacity-10" />
+                            <div className="text-center">
+                                <p className="text-xl font-black uppercase tracking-widest">No Vmix Systems Detected</p>
+                                <p className="text-sm font-medium mt-2">Waiting for first API handshake...</p>
+                            </div>
                         </div>
                     )}
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

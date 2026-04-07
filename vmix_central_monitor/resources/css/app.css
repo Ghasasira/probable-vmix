@@ -141,3 +141,10 @@
         @apply bg-background text-foreground;
     }
 }
+
+.auth-page-bg {
+    background-image: url('/nbs.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
