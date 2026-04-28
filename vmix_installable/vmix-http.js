@@ -28,44 +28,43 @@ async function fetchVmixState() {
 
 async function takeScreenshot(inputNumber, inputKey = null) {
   try {
-    // Wait a brief moment to ensure the transition is fully complete in vMix
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Try multiple possible endpoints for widest compatibility
     let res = null;
-    let error = null;
 
-    // Ordered by preference: Key (stable), Number (legacy), Program (fallback)
+    // vMix correct endpoints — try input-specific thumbnail first, then program output
     const urls = [];
-    if (inputKey) urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/previewimage/${inputKey}`);
-    if (inputNumber) urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/previewimage/${inputNumber}`);
-    urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/programimage`);
+    if (inputKey)    urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/thumbnails/input/${inputKey}`);
+    if (inputNumber) urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/thumbnails/input/${inputNumber}`);
+    urls.push(`http://${VMIX_HOST}:${VMIX_PORT}/programimage`); // always reliable fallback
 
     for (const url of urls) {
       try {
+        console.log(`[Screenshot] Trying: ${url}`);
         res = await axios.get(url, { responseType: 'arraybuffer', timeout: 5000 });
-        if (res.status === 200) break;
+        if (res.status === 200 && res.data?.byteLength > 0) {
+          console.log(`[Screenshot] Got image from: ${url} (${res.data.byteLength} bytes)`);
+          break;
+        }
       } catch (err) {
-        error = err;
-        continue; // Try next URL
+        console.warn(`[Screenshot] Failed URL ${url}: ${err.message}`);
+        continue;
       }
     }
 
-    if (!res) throw error || new Error('All image endpoints failed');
-    
+    if (!res || !res.data?.byteLength) {
+      throw new Error('All screenshot endpoints failed or returned empty data');
+    }
+
     const filename = `input_${inputNumber || 'active'}_${Date.now()}.jpg`;
     const filepath = path.join(SCREENSHOTS_DIR, filename);
-    fs.writeFileSync(filepath, res.data);
-    
+    fs.writeFileSync(filepath, Buffer.from(res.data));
+
+    console.log(`[Screenshot] Saved: ${filename}`);
     return `screenshots/${filename}`;
+
   } catch (err) {
-    if (err.response) {
-      console.error(`[Screenshot] Failed for input ${inputNumber}: HTTP ${err.response.status} - ${err.response.statusText}`);
-    } else if (err.code === 'ECONNREFUSED') {
-      console.error(`[Screenshot] Failed for input ${inputNumber}: Connection refused at ${VMIX_HOST}:${VMIX_PORT}`);
-    } else {
-      console.error(`[Screenshot] Failed for input ${inputNumber}:`, err.message);
-    }
+    console.error(`[Screenshot] Failed for input ${inputNumber}:`, err.message);
     return null;
   }
 }
