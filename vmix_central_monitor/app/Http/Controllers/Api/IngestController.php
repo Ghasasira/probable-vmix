@@ -51,7 +51,19 @@ class IngestController extends Controller
         // Build log rows, substituting the stored screenshot path where available
         $logs = collect($data)->map(function ($item) use ($device, $screenshotMap) {
             $agentId       = $item['id'] ?? null;
-            $screenshotPath = $screenshotMap[$agentId] ?? ($item['screenshot_path'] ?? null);
+            $rawPath       = $screenshotMap[$agentId] ?? ($item['screenshot_path'] ?? null);
+            $screenshotPath = null;
+
+            if ($rawPath) {
+                // If it's not a path we just created (doesn't start with screenshots/), 
+                // it might be a raw Windows path from the agent.
+                if (!str_starts_with($rawPath, 'screenshots/')) {
+                    $filename = basename(str_replace('\\', '/', $rawPath));
+                    $screenshotPath = "screenshots/{$device->machine_name}/{$filename}";
+                } else {
+                    $screenshotPath = $rawPath;
+                }
+            }
 
             return [
                 'device_id'       => $device->id,

@@ -32,12 +32,12 @@ class PlayLog extends Model
             return null;
         }
 
-        // The path in DB is just the filename or relative agent path (e.g., screenshots/img.jpg)
-        // We expect it to be stored on the server under screenshots/{machine_name}/{filename}
-        $filename = basename($this->screenshot_path);
+        // Normalize path (handle Windows backslashes if any)
+        $path = str_replace('\\', '/', $this->screenshot_path);
         
-        // This assumes the file actually exists on the server's public disk
-        return \Illuminate\Support\Facades\Storage::disk('public')->url("screenshots/{$this->device->machine_name}/{$filename}");
+        // Ensure the path is relative to the storage root (remove 'screenshots/' if redundant, 
+        // though storeAs already returns a relative path)
+        return '/storage/' . ltrim($path, '/');
     }
 
     public function getDurationFormattedAttribute(): string
