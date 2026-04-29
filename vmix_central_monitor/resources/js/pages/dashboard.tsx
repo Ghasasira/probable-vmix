@@ -11,6 +11,7 @@ import {
     Monitor,
     PlayCircle
 } from 'lucide-react';
+import { ImagePreview } from '@/components/image-preview';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -179,6 +180,7 @@ export default function Dashboard({ stats, chart_data, recent_logs, devices }: a
                                 <thead className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black bg-muted/5 border-b">
                                     <tr>
                                         <th className="px-6 py-4">Timestamp</th>
+                                        <th className="px-6 py-4 text-center">Snapshot</th>
                                         <th className="px-6 py-4">Unit</th>
                                         <th className="px-6 py-4">Input Name</th>
                                         <th className="px-6 py-4 text-right">Duration</th>
@@ -190,6 +192,9 @@ export default function Dashboard({ stats, chart_data, recent_logs, devices }: a
                                         <tr key={log.id} className="hover:bg-primary/[0.02] transition-colors group">
                                             <td className="px-6 py-4 whitespace-nowrap font-mono text-[10px] text-muted-foreground/70 font-semibold italic">
                                                 {new Date(log.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <ImagePreview src={log.screenshot_url} alt={log.input_name} />
                                             </td>
                                             <td className="px-6 py-4 font-black text-foreground group-hover:text-primary transition-colors uppercase tracking-tight">
                                                 {log.device.display_name || log.device.machine_name}
@@ -206,7 +211,7 @@ export default function Dashboard({ stats, chart_data, recent_logs, devices }: a
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan={5} className="px-6 py-20 text-center text-muted-foreground/30">
+                                            <td colSpan={6} className="px-6 py-20 text-center text-muted-foreground/30">
                                                 <div className="flex flex-col items-center gap-4">
                                                     <ClipboardList className="h-16 w-16 opacity-10" />
                                                     <p className="text-sm font-medium tracking-wide">No playback records found for today</p>

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, ClipboardList, Filter, LayoutGrid, Monitor, RotateCcw, Search } from 'lucide-react';
+import { ImagePreview } from '@/components/image-preview';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -167,19 +168,7 @@ export default function Index({ logs, filters, devices, types }: any) {
                                                 {new Date(log.played_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'medium' })}
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                {log.screenshot_url ? (
-                                                    <a href={log.screenshot_url} target="_blank" rel="noreferrer" className="inline-block relative group/img">
-                                                        <img 
-                                                            src={log.screenshot_url} 
-                                                            alt="Input" 
-                                                            className="h-8 w-12 object-cover rounded shadow-sm border border-border group-hover/img:scale-150 transition-transform origin-center z-10" 
-                                                        />
-                                                    </a>
-                                                ) : (
-                                                    <div className="h-8 w-12 bg-muted/30 rounded border border-dashed flex items-center justify-center">
-                                                        <Monitor className="h-3 w-3 text-muted-foreground/20" />
-                                                    </div>
-                                                )}
+                                                <ImagePreview src={log.screenshot_url} alt={log.input_name} />
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">

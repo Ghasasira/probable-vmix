@@ -7,6 +7,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { Activity, ArrowLeft, ChevronLeft, ChevronRight, ClipboardList, Clock, Edit3, Monitor, PlayCircle, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
+import { ImagePreview } from '@/components/image-preview';
 import devices from '@/routes/devices';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -159,19 +160,7 @@ export default function Show({ device, logs, stats }: any) {
                                                 {new Date(log.played_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                {log.screenshot_url ? (
-                                                    <a href={log.screenshot_url} target="_blank" rel="noreferrer" className="inline-block relative">
-                                                        <img 
-                                                            src={log.screenshot_url} 
-                                                            alt="Preview" 
-                                                            className="h-8 w-12 object-cover rounded shadow-sm border border-border" 
-                                                        />
-                                                    </a>
-                                                ) : (
-                                                    <div className="h-8 w-12 bg-muted/30 rounded border border-dashed flex items-center justify-center">
-                                                        <Monitor className="h-3 w-3 text-muted-foreground/20" />
-                                                    </div>
-                                                )}
+                                                <ImagePreview src={log.screenshot_url} alt={log.input_name} />
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
